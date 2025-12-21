@@ -16,28 +16,28 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 ---
 
-## Phase 0 – Foundations (Blocking)
+## Phase 0 – Foundations (Blocking) [IN PROGRESS]
 
 **Goal:** Make the project safe to evolve, and trivial to run on any machine.
 
 ### Backend
-- FastAPI project scaffold
-- Application settings & config loading
-- Local filesystem layout (`data/`, `invoices/`)
-- SQLite connection with foreign keys enabled
+- [x] FastAPI project scaffold
+- [x] Application settings & config loading
+- [x] Local filesystem layout (`data/`, `invoices/`)
+- [x] SQLite connection with foreign keys enabled
 
 ### Docker (Backend)
-- `backend/Dockerfile` for the FastAPI runtime
-- `docker-compose.yml` for local development
-- Bind-mount persistent app data (DB + PDFs):
+- [ ] `backend/Dockerfile` for the FastAPI runtime
+- [ ] `docker-compose.yml` for local development
+- [ ] Bind-mount persistent app data (DB + PDFs):
   - `./backend/data:/app/data`
-- Env var convention:
+- [ ] Env var convention:
   - `TEVILDO_DATA_DIR=/app/data`
 
 ### Database
-- SQLAlchemy models aligned with `DATABASE.md`
-- Alembic setup
-- Initial migration (baseline schema)
+- [x] SQLAlchemy models aligned with `DATABASE.md`
+- [ ] Alembic setup
+- [ ] Initial migration (baseline schema)
 
 ### Definition of done
 - App starts locally (via Docker)
