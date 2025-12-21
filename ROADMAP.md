@@ -1,0 +1,156 @@
+# 🗺️ Tevildo – Project Roadmap
+
+This roadmap translates Tevildo’s **design and architecture** into an ordered, low-risk execution plan.
+
+It is intentionally conservative, local-first, and optimized for correctness over speed — while still being **reproducible across machines** via Docker for the backend.
+
+---
+
+## Guiding Principles
+
+- Build **vertically**, not horizontally
+- Each phase must leave the app in a **usable, coherent state**
+- Prefer **manual correctness** before automation
+- Avoid speculative features
+- Keep everything **audit-safe** and explainable
+
+---
+
+## Phase 0 – Foundations (Blocking)
+
+**Goal:** Make the project safe to evolve, and trivial to run on any machine.
+
+### Backend
+- FastAPI project scaffold
+- Application settings & config loading
+- Local filesystem layout (`data/`, `invoices/`)
+- SQLite connection with foreign keys enabled
+
+### Docker (Backend)
+- `backend/Dockerfile` for the FastAPI runtime
+- `docker-compose.yml` for local development
+- Bind-mount persistent app data (DB + PDFs):
+  - `./backend/data:/app/data`
+- Env var convention:
+  - `TEVILDO_DATA_DIR=/app/data`
+
+### Database
+- SQLAlchemy models aligned with `DATABASE.md`
+- Alembic setup
+- Initial migration (baseline schema)
+
+### Definition of done
+- App starts locally (via Docker)
+- Database can be created from scratch via migrations
+- Persistent data survives container restarts (volume/bind mount)
+- No business logic yet
+
+---
+
+## Phase 1 – Invoice Ingestion (MVP)
+
+**Goal:** Replace spreadsheets with a trusted source of truth.
+
+### Features
+- Upload invoice PDF
+- Persist `stored_file`
+- Create `invoice` in `UPLOADED` state
+- Manual invoice data entry (UI-driven)
+- Lock invoice snapshot
+
+### UI
+- Invoice list
+- Invoice detail / edit screen
+- Status indicators
+
+### Definition of done
+- User can upload PDFs
+- User can manually input all invoice data
+- Totals and dates persist correctly
+
+---
+
+## Phase 2 – Parsing & Review Loop
+
+**Goal:** Assist the user, never override them.
+
+### Features
+- PDF parsing service
+- `invoice_parse_attempt` persistence
+- Confidence + warnings
+- `NEEDS_REVIEW` workflow
+
+### UI
+- Side-by-side parsed vs manual fields
+- Explicit user confirmation
+
+### Definition of done
+- Parsing never mutates locked data
+- All attempts are auditable
+
+---
+
+## Phase 3 – Monotributo Tracking
+
+**Goal:** Prevent category overruns.
+
+### Features
+- Category version management
+- Category limits per version
+- Rolling 12-month calculations
+- Usage percentage + remaining margin
+
+### UI
+- Traffic-light status
+- Historical category context
+
+### Definition of done
+- Correct calculations for past and current invoices
+- Historical reports remain stable after category changes
+
+---
+
+## Phase 4 – Reports & Exports
+
+**Goal:** Accountant-ready outputs.
+
+### Features
+- Excel summary report
+- ZIP export with PDFs grouped by month
+- Full local backup export
+
+### Definition of done
+- Accountant can work without re-processing data
+- Exports are reproducible
+
+---
+
+## Phase 5 – Quality & Polish
+
+**Goal:** Make it pleasant and safe to use long-term.
+
+- Validation & error handling
+- UI refinements
+- Import/export edge cases
+- Performance cleanup (only if needed)
+
+---
+
+## Explicitly Deferred (Non-Goals)
+
+- ARCA / AFIP integration
+- Multi-user support
+- Cloud sync
+- Mobile-first UX
+- Automated invoice issuance
+
+---
+
+## Roadmap Philosophy
+
+If a feature:
+- risks auditability
+- adds operational complexity
+- or reduces clarity
+
+…it does **not** belong in Tevildo.
