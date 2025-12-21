@@ -1,0 +1,20 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tevildo-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - TEVILDO_DATA_DIR=/app/data
+      - DEBUG=True
+    volumes:
+      # Bind mount for persistent data (SQLite DB + PDFs)
+      - ./backend/data:/app/data
+      # Bind mount for live code reloading during development
+      - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
+    working_dir: /app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
