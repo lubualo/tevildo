@@ -1,4 +1,4 @@
-.PHONY: help up down logs shell migration migrate db-reset test clean
+.PHONY: help up down logs shell migration migrate db-reset db-inspect db-shell rebuild test clean
 
 # Default target - show help
 help:
@@ -9,10 +9,13 @@ help:
 	@echo "  make down        - Stop all services"
 	@echo "  make logs        - Show logs (follow mode)"
 	@echo "  make shell       - Open shell in backend container"
+	@echo "  make rebuild     - Force rebuild without cache"
 	@echo ""
 	@echo "Database:"
 	@echo "  make migration   - Generate new Alembic migration (requires msg=\"...\")"
 	@echo "  make migrate     - Apply pending migrations"
+	@echo "  make db-inspect  - Show all database tables"
+	@echo "  make db-shell    - Open SQLite shell for database"
 	@echo "  make db-reset    - Reset database (destroy + recreate)"
 	@echo ""
 	@echo "Maintenance:"
@@ -62,6 +65,19 @@ clean:
 	@echo "🗑️  Removing Tevildo images..."
 	docker compose down --rmi local
 	@echo "✅ Done! (Only Tevildo resources removed)"
+
+# Inspect database tables
+db-inspect:
+	docker compose exec backend sqlite3 /app/data/app.db ".tables"
+
+# Open SQLite shell for database
+db-shell:
+	docker compose exec backend sqlite3 /app/data/app.db
+
+# Force rebuild without cache
+rebuild:
+	docker compose build --no-cache
+	docker compose up
 
 # Run tests (placeholder for future)
 test:
