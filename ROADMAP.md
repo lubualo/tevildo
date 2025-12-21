@@ -16,7 +16,7 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 ---
 
-## Phase 0 – Foundations (Blocking) [IN PROGRESS]
+## Phase 0 – Foundations (Blocking) [COMPLETED] ✅
 
 **Goal:** Make the project safe to evolve, and trivial to run on any machine.
 
@@ -27,23 +27,25 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 - [x] SQLite connection with foreign keys enabled
 
 ### Docker (Backend)
-- [ ] `backend/Dockerfile` for the FastAPI runtime
-- [ ] `docker-compose.yml` for local development
-- [ ] Bind-mount persistent app data (DB + PDFs):
+- [x] `backend/Dockerfile` for the FastAPI runtime
+- [x] `docker-compose.yml` for local development
+- [x] Bind-mount persistent app data (DB + PDFs):
   - `./backend/data:/app/data`
-- [ ] Env var convention:
+- [x] Env var convention:
   - `TEVILDO_DATA_DIR=/app/data`
 
 ### Database
 - [x] SQLAlchemy models aligned with `DATABASE.md`
-- [ ] Alembic setup
-- [ ] Initial migration (baseline schema)
+- [x] Alembic setup
+- [x] Initial migration (baseline schema)
 
 ### Definition of done
-- App starts locally (via Docker)
-- Database can be created from scratch via migrations
-- Persistent data survives container restarts (volume/bind mount)
-- No business logic yet
+- [x] App starts locally (via Docker)
+- [x] Database can be created from scratch via migrations
+- [x] Persistent data survives container restarts (volume/bind mount)
+- [x] No business logic yet
+
+**Completed:** 2025-12-21
 
 ---
 

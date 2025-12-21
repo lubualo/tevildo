@@ -17,24 +17,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+### Quick Start
+
+**First time setup:**
+```bash
+make up          # Start services (builds Docker image)
+make migrate     # Apply database migrations
+```
+
+**Verify it works:**
+- http://localhost:8000 - API health check
+- http://localhost:8000/docs - Interactive API docs
+
 ### Backend (via Docker)
 
-The backend is designed to run in Docker for environment consistency:
+The backend runs in Docker for environment consistency. Use the Makefile for convenience:
 
 ```bash
-# Start backend services
-docker compose up
+# Development workflow
+make help        # Show all available commands
+make up          # Start backend services (with build)
+make down        # Stop services
+make logs        # View logs (follow mode)
+make shell       # Open bash shell in backend container
 
-# Run database migrations
+# Database migrations
+make migration msg="describe change"  # Generate new migration
+make migrate                          # Apply pending migrations
+make db-reset                         # Reset database (destructive!)
+
+# Testing (when implemented)
+make test        # Run all tests
+```
+
+**Without Make (direct docker compose):**
+```bash
+docker compose up --build
 docker compose exec backend alembic upgrade head
-
-# Generate a new migration (after modifying SQLAlchemy models)
 docker compose exec backend alembic revision --autogenerate -m "describe change"
-
-# Run a single test
-docker compose exec backend pytest path/to/test_file.py::test_name
-
-# Run all tests
 docker compose exec backend pytest
 ```
 

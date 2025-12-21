@@ -120,6 +120,67 @@ Computed metrics:
 
 ---
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Docker** and **Docker Compose** installed
+- **Make** (optional, but recommended for easier commands)
+
+### Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd tevildo
+   ```
+
+2. **Start the backend**
+   ```bash
+   # With Make (recommended)
+   make up
+
+   # Or with docker compose directly
+   docker compose up --build
+   ```
+
+3. **Run database migrations**
+   ```bash
+   # In a new terminal
+   make migrate
+
+   # Or with docker compose
+   docker compose exec backend alembic upgrade head
+   ```
+
+4. **Verify it's working**
+   - Open http://localhost:8000 - should see API status
+   - Open http://localhost:8000/docs - FastAPI interactive docs
+
+### Common Commands
+
+See all available commands:
+```bash
+make help
+```
+
+Key commands:
+- `make up` - Start services
+- `make down` - Stop services
+- `make logs` - View logs
+- `make shell` - Open shell in backend container
+- `make migration msg="description"` - Create new migration
+- `make migrate` - Apply pending migrations
+
+### Project Status
+
+**Phase 0 (Foundations):** ✅ Complete
+**Phase 1 (Invoice Ingestion):** 🚧 Not started
+
+See [ROADMAP.md](ROADMAP.md) for detailed progress.
+
+---
+
 ## 🗂️ Repository Structure
 
 ```yaml

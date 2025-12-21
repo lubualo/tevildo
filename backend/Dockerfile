@@ -3,9 +3,10 @@ FROM python:3.14.2-slim
 # Set working directory in container
 WORKDIR /app
 
-# Install system dependencies (if needed for PDF processing later)
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (for better Docker layer caching)
