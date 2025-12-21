@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Backend: Local data (SQLite DB and invoice PDFs)
+backend/data/*
+!backend/data/.gitkeep
+
+# Backend: Environment variables
+backend/.env
+
+# Frontend: Dependencies and build artifacts
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
