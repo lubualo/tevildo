@@ -59,6 +59,7 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 - [x] Create `invoice` in `UPLOADED` state
 - [x] Pydantic schemas for type-safe API responses
 - [x] Invoice list endpoint (GET /api/invoices) with pagination
+- [x] Invoice delete endpoint (DELETE /api/invoices/{id})
 - [ ] Invoice detail endpoint (GET /api/invoices/{id})
 - [ ] Invoice update endpoint (PUT /api/invoices/{id})
 - [ ] Invoice lock endpoint (POST /api/invoices/{id}/lock)
@@ -70,6 +71,7 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 - [x] Invoice list page with table
 - [x] Status badges with color coding
 - [x] Navigation between upload and list pages
+- [x] Delete functionality with confirmation dialog
 - [ ] Invoice detail / edit screen
 
 ### Definition of done

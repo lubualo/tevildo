@@ -2,9 +2,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 Table,
 TableBody,
@@ -13,6 +13,17 @@ TableHead,
 TableHeader,
 TableRow,
 } from "@/components/ui/table";
+import {
+AlertDialog,
+AlertDialogAction,
+AlertDialogCancel,
+AlertDialogContent,
+AlertDialogDescription,
+AlertDialogFooter,
+AlertDialogHeader,
+AlertDialogTitle,
+AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Invoice {
 id: string;
@@ -27,42 +38,71 @@ total_ars: number | null;
 locked_at: string | null;
 }
 
+interface InvoiceListResponse {
+invoices: Invoice[];
+total: number;
+skip: number;
+limit: number;
+}
+
 export default function InvoicesPage() {
 const [invoices, setInvoices] = useState<Invoice[]>([]);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState<string | null>(null);
 
-useEffect(() => {
-    async function fetchInvoices() {
+const fetchInvoices = async () => {
     try {
-        const response = await fetch("http://localhost:8000/api/invoices");
-        if (!response.ok) {
+    setLoading(true);
+    const response = await fetch("http://localhost:8000/api/invoices");
+    if (!response.ok) {
         throw new Error("Failed to fetch invoices");
-        }
-        const data = await response.json();
-        setInvoices(data.invoices);
+    }
+    const data: InvoiceListResponse = await response.json();
+    setInvoices(data.invoices);
     } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load invoices");
+    setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
-        setLoading(false);
+    setLoading(false);
     }
-    }
+};
 
+useEffect(() => {
     fetchInvoices();
 }, []);
 
+const handleDelete = async (invoiceId: string) => {
+    try {
+    const response = await fetch(`http://localhost:8000/api/invoices/${invoiceId}`, {
+        method: "DELETE",
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to delete invoice");
+    }
+
+    // Refresh the invoice list
+    await fetchInvoices();
+    } catch (err) {
+    setError(err instanceof Error ? err.message : "Failed to delete invoice");
+    }
+};
+
 const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    const variants: Record<string, "default" | "secondary" | "destructive"> = {
     UPLOADED: "secondary",
     PARSED: "default",
     NEEDS_REVIEW: "destructive",
     };
-    return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
+    return <Badge variant={variants[status] || "default"}>{status}</Badge>;
+};
+
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
 };
 
 if (loading) {
     return (
-    <div className="container mx-auto py-10 max-w-6xl">
+    <div className="container mx-auto p-8">
         <p>Loading invoices...</p>
     </div>
     );
@@ -70,86 +110,89 @@ if (loading) {
 
 if (error) {
     return (
-    <div className="container mx-auto py-10 max-w-6xl">
-        <div className="p-3 bg-destructive/10 text-destructive rounded-md">
-        {error}
-        </div>
+    <div className="container mx-auto p-8">
+        <p className="text-red-500">Error: {error}</p>
     </div>
     );
 }
 
 return (
-    <div className="container mx-auto py-10 max-w-6xl">
-    <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Invoices</h1>
-        <p className="text-muted-foreground">
-        View and manage all uploaded invoices
-        </p>
-        <div className="mt-4">
-        <Link
-            href="/"
-            className="text-sm text-primary hover:underline"
-        >
-            ← Back to upload
+    <div className="container mx-auto p-8">
+    <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Invoices</h1>
+        <Link href="/">
+        <Button variant="outline">Upload New Invoice</Button>
         </Link>
-        </div>
     </div>
 
-    <Card>
-        <CardHeader>
-        <CardTitle>All Invoices</CardTitle>
-        <CardDescription>
-            {invoices.length} invoice{invoices.length !== 1 ? "s" : ""} total
-        </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="rounded-md border">
         <Table>
-            <TableHeader>
+        <TableHeader>
             <TableRow>
-                <TableHead>Status</TableHead>
-                <TableHead>Uploaded</TableHead>
-                <TableHead>Issue Date</TableHead>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Currency</TableHead>
-                <TableHead className="text-right">Total (ARS)</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Uploaded At</TableHead>
+            <TableHead>Invoice Number</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Total (ARS)</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-            </TableHeader>
-            <TableBody>
+        </TableHeader>
+        <TableBody>
             {invoices.length === 0 ? (
-                <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    No invoices uploaded yet
+            <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                No invoices found
+                </TableCell>
+            </TableRow>
+            ) : (
+            invoices.map((invoice) => (
+                <TableRow key={invoice.id}>
+                <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                <TableCell>{formatDate(invoice.uploaded_at)}</TableCell>
+                <TableCell>{invoice.invoice_number || "—"}</TableCell>
+                <TableCell>{invoice.client_name || "—"}</TableCell>
+                <TableCell>
+                    {invoice.total_ars
+                    ? invoice.total_ars.toLocaleString("es-AR", {
+                        style: "currency",
+                        currency: "ARS",
+                        })
+                    : "—"}
+                </TableCell>
+                <TableCell className="text-right">
+                    <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                        Delete
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this invoice? This will
+                            permanently remove the invoice and its PDF file from the
+                            system. This action cannot be undone.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => handleDelete(invoice.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                    </AlertDialog>
                 </TableCell>
                 </TableRow>
-            ) : (
-                invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                    <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                    <TableCell>
-                    {new Date(invoice.uploaded_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>{invoice.issue_date || "-"}</TableCell>
-                    <TableCell className="font-mono text-sm">
-                    {invoice.invoice_number || "-"}
-                    </TableCell>
-                    <TableCell>{invoice.client_name || "-"}</TableCell>
-                    <TableCell>{invoice.currency || "-"}</TableCell>
-                    <TableCell className="text-right font-mono">
-                    {invoice.total_ars
-                        ? invoice.total_ars.toLocaleString("es-AR", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                        })
-                        : "-"}
-                    </TableCell>
-                </TableRow>
-                ))
+            ))
             )}
-            </TableBody>
+        </TableBody>
         </Table>
-        </CardContent>
-    </Card>
+    </div>
     </div>
 );
 }

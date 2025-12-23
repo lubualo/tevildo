@@ -135,3 +135,43 @@ async def upload_invoice(
             sha256=sha256_hash,
         )
     )
+
+@router.delete("/{invoice_id}")
+async def delete_invoice(
+    invoice_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Delete an invoice and its associated stored file.
+
+    Cascade deletes related records (parse attempts, tags).
+    Physical file is also removed from disk.
+    """
+    # Find the invoice
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Invoice {invoice_id} not found"
+        )
+
+    # Get the stored file before deleting
+    stored_file = db.query(StoredFile).filter(StoredFile.id == invoice.stored_file_id).first()
+
+    if stored_file:
+        # Delete physical file from disk
+        file_path = settings.tevildo_data_dir / stored_file.relative_path
+        if file_path.exists():
+            file_path.unlink()
+
+    # Delete invoice (cascades to invoice_parse_attempt and invoice_tag due to FK constraints)
+    db.delete(invoice)
+
+    # Delete stored_file record
+    if stored_file:
+        db.delete(stored_file)
+
+    db.commit()
+
+    return {"message": f"Invoice {invoice_id} deleted successfully"}
