@@ -49,26 +49,33 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 ---
 
-## Phase 1 – Invoice Ingestion (MVP)
+## Phase 1 – Invoice Ingestion (MVP) [IN PROGRESS]
 
 **Goal:** Replace spreadsheets with a trusted source of truth.
 
-### Features
-- Upload invoice PDF
-- Persist `stored_file`
-- Create `invoice` in `UPLOADED` state
-- Manual invoice data entry (UI-driven)
-- Lock invoice snapshot
+### Backend
+- [x] Upload invoice PDF endpoint
+- [x] Persist `stored_file` with SHA256 hash
+- [x] Create `invoice` in `UPLOADED` state
+- [ ] Invoice list endpoint (GET /api/invoices)
+- [ ] Invoice detail endpoint (GET /api/invoices/{id})
+- [ ] Invoice update endpoint (PUT /api/invoices/{id})
+- [ ] Invoice lock endpoint (POST /api/invoices/{id}/lock)
 
-### UI
-- Invoice list
-- Invoice detail / edit screen
-- Status indicators
+### Frontend
+- [x] Next.js 16 setup with App Router
+- [x] shadcn/ui + Tailwind CSS v4
+- [x] Upload page with file picker
+- [ ] Invoice list page
+- [ ] Invoice detail / edit screen
+- [ ] Status indicators and badges
 
 ### Definition of done
-- User can upload PDFs
-- User can manually input all invoice data
-- Totals and dates persist correctly
+- [x] User can upload PDFs via web UI
+- [ ] User can see list of uploaded invoices
+- [ ] User can manually input all invoice data
+- [ ] Totals and dates persist correctly
+- [ ] User can lock invoice snapshot
 
 ---
 
