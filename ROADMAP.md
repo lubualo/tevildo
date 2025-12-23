@@ -57,7 +57,8 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 - [x] Upload invoice PDF endpoint
 - [x] Persist `stored_file` with SHA256 hash
 - [x] Create `invoice` in `UPLOADED` state
-- [ ] Invoice list endpoint (GET /api/invoices)
+- [x] Pydantic schemas for type-safe API responses
+- [x] Invoice list endpoint (GET /api/invoices) with pagination
 - [ ] Invoice detail endpoint (GET /api/invoices/{id})
 - [ ] Invoice update endpoint (PUT /api/invoices/{id})
 - [ ] Invoice lock endpoint (POST /api/invoices/{id}/lock)
@@ -66,13 +67,14 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 - [x] Next.js 16 setup with App Router
 - [x] shadcn/ui + Tailwind CSS v4
 - [x] Upload page with file picker
-- [ ] Invoice list page
+- [x] Invoice list page with table
+- [x] Status badges with color coding
+- [x] Navigation between upload and list pages
 - [ ] Invoice detail / edit screen
-- [ ] Status indicators and badges
 
 ### Definition of done
 - [x] User can upload PDFs via web UI
-- [ ] User can see list of uploaded invoices
+- [x] User can see list of uploaded invoices
 - [ ] User can manually input all invoice data
 - [ ] Totals and dates persist correctly
 - [ ] User can lock invoice snapshot
