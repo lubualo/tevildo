@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.settings import settings
+from app.api.invoices import router as invoices_router
 
 
 @asynccontextmanager
@@ -48,6 +49,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register API routers
+app.include_router(invoices_router)
 
 
 @app.get("/")
