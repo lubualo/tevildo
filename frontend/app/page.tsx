@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,14 @@ export default function HomePage() {
         <p className="text-muted-foreground">
           Upload invoice PDFs to track your Monotributo income
         </p>
+        <div className="mt-4">
+          <Link
+            href="/invoices"
+            className="text-sm text-primary hover:underline"
+          >
+            View all invoices →
+          </Link>
+        </div>
       </div>
 
       <Card className="mb-6">

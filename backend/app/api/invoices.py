@@ -13,11 +13,39 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.settings import settings
 from app.models import Invoice, StoredFile
+from app.api.schemas import InvoiceResponse, InvoiceListResponse, UploadResponse, FileInfo
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
+@router.get("", response_model=InvoiceListResponse)
+async def list_invoices(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """
+    List all invoices with pagination.
 
-@router.post("/upload")
+    Returns invoices ordered by upload date (newest first).
+    """
+    invoices = (
+        db.query(Invoice)
+        .order_by(Invoice.uploaded_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    return InvoiceListResponse(
+        invoices=[InvoiceResponse.model_validate(inv) for inv in invoices],
+        total=db.query(Invoice).count(),
+        skip=skip,
+        limit=limit,
+    )
+
+
+
+@router.post("/upload", response_model=UploadResponse)
 async def upload_invoice(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
@@ -96,14 +124,14 @@ async def upload_invoice(
     db.commit()
     db.refresh(invoice)
 
-    return {
-        "id": invoice.id,
-        "status": invoice.status,
-        "uploaded_at": invoice.uploaded_at.isoformat(),
-        "file": {
-            "id": stored_file.id,
-            "path": relative_path,
-            "size": file_size,
-            "sha256": sha256_hash,
-        }
-    }
+    return UploadResponse(
+        id=invoice.id,
+        status=invoice.status,
+        uploaded_at=invoice.uploaded_at,
+        file=FileInfo(
+            id=stored_file.id,
+            path=relative_path,
+            size=file_size,
+            sha256=sha256_hash,
+        )
+    )
