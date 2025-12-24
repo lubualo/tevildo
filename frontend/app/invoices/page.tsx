@@ -24,19 +24,7 @@ AlertDialogHeader,
 AlertDialogTitle,
 AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-interface Invoice {
-id: string;
-status: string;
-uploaded_at: string;
-issue_date: string | null;
-invoice_type: string | null;
-invoice_number: string | null;
-client_name: string | null;
-currency: string | null;
-total_ars: number | null;
-locked_at: string | null;
-}
+import { type Invoice } from "@/lib/schemas/invoice";
 
 interface InvoiceListResponse {
 invoices: Invoice[];
@@ -88,7 +76,12 @@ const handleDelete = async (invoiceId: string) => {
     }
 };
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string, isLocked: boolean) => {
+    // Don't show status badge when locked - the lock badge is sufficient
+    if (isLocked) {
+    return null;
+    }
+
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
     UPLOADED: "secondary",
     PARSED: "default",
@@ -154,7 +147,7 @@ return (
                 >
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {getStatusBadge(invoice.status)}
+                    {getStatusBadge(invoice.status, invoice.locked_at !== null)}
                     {invoice.locked_at && (
                       <Badge variant="outline" className="text-xs">
                         🔒 Locked

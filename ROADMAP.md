@@ -89,23 +89,34 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 ---
 
-## Phase 2 – Parsing & Review Loop
+## Phase 2 – Parsing & Review Loop [COMPLETED] ✅
 
 **Goal:** Assist the user, never override them.
 
-### Features
-- PDF parsing service
-- `invoice_parse_attempt` persistence
-- Confidence + warnings
-- `NEEDS_REVIEW` workflow
+### Backend
+- [x] PDF parsing service with pdfplumber
+- [x] Regex patterns for Type C and Type E invoices
+- [x] Confidence scoring per field (0.0 to 1.0)
+- [x] `invoice_parse_attempt` table persistence
+- [x] Auto-parsing on upload
+- [x] Status updates based on confidence (PARSED ≥0.7, NEEDS_REVIEW <0.7)
+- [x] Performance benchmarking (~0.3s parse time)
 
-### UI
-- Side-by-side parsed vs manual fields
-- Explicit user confirmation
+### Frontend
+- [x] Parse attempts API endpoint
+- [x] Parsed data display in detail view
+- [x] "Copy All to Form" button for bulk accept
+- [x] Auto-calculation trigger after copying parsed data
+- [x] Confidence badge display
+- [x] Status badges hidden when invoice is locked
 
 ### Definition of done
-- Parsing never mutates locked data
-- All attempts are auditable
+- [x] Parsing never mutates locked data
+- [x] All attempts are auditable
+- [x] User has explicit control over accepting parsed data
+- [x] Type-safe interfaces for parsed data
+
+**Completed:** 2025-12-24
 
 ---
 

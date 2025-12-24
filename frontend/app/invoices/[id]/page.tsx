@@ -24,26 +24,12 @@ CardHeader,
 CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { invoiceFormSchema, type InvoiceFormData } from "@/lib/schemas/invoice";
-
-interface Invoice {
-id: string;
-status: string;
-uploaded_at: string;
-issue_date: string | null;
-invoice_type: string | null;
-invoice_number: string | null;
-client_name: string | null;
-client_tax_id: string | null;
-currency: string | null;
-total_ars: number | null;
-total_original: number | null;
-fx_rate: number | null;
-fx_date: string | null;
-fx_source: string | null;
-notes: string | null;
-locked_at: string | null;
-}
+import {
+  invoiceFormSchema,
+  type InvoiceFormData,
+  type Invoice,
+  type ParsedDataAttempt
+} from "@/lib/schemas/invoice";
 
 export default function InvoiceDetailPage() {
 const params = useParams();
@@ -53,6 +39,8 @@ const [invoice, setInvoice] = useState<Invoice | null>(null);
 const [loading, setLoading] = useState(true);
 const [saving, setSaving] = useState(false);
 const [error, setError] = useState<string | null>(null);
+const [parsedData, setParsedData] = useState<ParsedDataAttempt | null>(null);
+const [showParsedData, setShowParsedData] = useState(true);
 
 // React Hook Form setup
 const form = useForm<InvoiceFormData>({
@@ -171,6 +159,29 @@ useEffect(() => {
     fetchInvoice();
 }, [invoiceId, form]);
 
+// Fetch parse attempts
+useEffect(() => {
+const fetchParseAttempts = async () => {
+    if (!invoiceId) return;
+
+    try {
+    const response = await fetch(`http://localhost:8000/api/invoices/${invoiceId}/parse-attempts`);
+
+    if (response.ok) {
+        const attempts = await response.json();
+        if (attempts.length > 0) {
+        // Use most recent parse attempt
+        setParsedData(attempts[0]);
+        }
+    }
+    } catch (err) {
+    console.error("Failed to fetch parse attempts:", err);
+    }
+};
+
+fetchParseAttempts();
+}, [invoiceId]);
+
 // Save invoice
 const onSubmit = async (data: InvoiceFormData) => {
     try {
@@ -245,6 +256,48 @@ const handleLock = async () => {
     }
 };
 
+const handleCopyParsedData = () => {
+if (!parsedData?.extracted_data) return;
+
+const data = parsedData.extracted_data;
+
+form.reset({
+    issue_date: data.issue_date || "",
+    invoice_type: data.invoice_type || "",
+    invoice_number: data.invoice_number || "",
+    client_name: data.client_name || "",
+    client_tax_id: data.client_tax_id || "",
+    currency: data.currency || "",
+    total_ars: data.total_ars?.toString() || "",
+    total_original: data.total_original?.toString() || "",
+    fx_rate: data.fx_rate?.toString() || "",
+    fx_date: data.fx_date || "",
+    fx_source: data.fx_source || "",
+    notes: data.notes || "",
+});
+
+// Manually trigger calculation for USD invoices
+// If we have fx_rate and total_original but no total_ars (or vice versa)
+const fxRate = data.fx_rate ? parseFloat(data.fx_rate.toString()) : null;
+const totalOriginal = data.total_original ? parseFloat(data.total_original.toString()) : null;
+const totalArs = data.total_ars ? parseFloat(data.total_ars.toString()) : null;
+
+if (fxRate && fxRate > 0) {
+    if (totalOriginal && !totalArs) {
+    // Calculate total_ars from total_original
+    const calculatedArs = totalOriginal * fxRate;
+    form.setValue("total_ars", calculatedArs.toFixed(2), { shouldValidate: false });
+    } else if (totalArs && !totalOriginal) {
+    // Calculate total_original from total_ars
+    const calculatedOriginal = totalArs / fxRate;
+    form.setValue("total_original", calculatedOriginal.toFixed(2), { shouldValidate: false });
+    }
+}
+
+setShowParsedData(false);
+alert("Parsed data copied to form!");
+};
+
 if (loading) {
     return (
     <div className="container mx-auto p-8">
@@ -289,6 +342,74 @@ return (
         <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-4">
         {error}
         </div>
+    )}
+
+    {parsedData && parsedData.extracted_data && showParsedData && !isLocked && (
+    <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="flex items-start justify-between">
+        <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+            <h3 className="font-semibold text-blue-900">
+                📋 Parsed Data Available
+            </h3>
+            <Badge variant="outline" className="text-xs">
+                Confidence: {Math.round(parsedData.confidence * 100)}%
+            </Badge>
+            {parsedData.confidence < 0.7 && (
+                <Badge variant="destructive" className="text-xs">
+                Needs Review
+                </Badge>
+            )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-blue-800 mb-3">
+            {parsedData.extracted_data.invoice_number && (
+                <div>Invoice: <span className="font-medium">{parsedData.extracted_data.invoice_number}</span></div>
+            )}
+            {parsedData.extracted_data.issue_date && (
+                <div>Date: <span className="font-medium">{parsedData.extracted_data.issue_date}</span></div>
+            )}
+            {parsedData.extracted_data.client_name && (
+                <div>Client: <span className="font-medium">{parsedData.extracted_data.client_name}</span></div>
+            )}
+            {parsedData.extracted_data.currency && (
+                <div>Currency: <span className="font-medium">{parsedData.extracted_data.currency}</span></div>
+            )}
+            {parsedData.extracted_data.total_ars && (
+                <div>Total ARS: <span className="font-medium">{parsedData.extracted_data.total_ars.toLocaleString()}</span></div>
+            )}
+            {parsedData.extracted_data.total_original && (
+                <div>Total USD: <span className="font-medium">{parsedData.extracted_data.total_original}</span></div>
+            )}
+            {parsedData.extracted_data.fx_rate && (
+                <div>FX Rate: <span className="font-medium">{parsedData.extracted_data.fx_rate}</span></div>
+            )}
+            {parsedData.extracted_data.cae && (
+                <div className="col-span-2">CAE: <span className="font-medium font-mono text-xs">{parsedData.extracted_data.cae}</span></div>
+            )}
+            </div>
+
+            <div className="flex gap-2">
+            <Button
+                type="button"
+                size="sm"
+                onClick={handleCopyParsedData}
+                className="bg-blue-600 hover:bg-blue-700"
+            >
+                Copy All to Form
+            </Button>
+            <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setShowParsedData(false)}
+            >
+                Dismiss
+            </Button>
+            </div>
+        </div>
+        </div>
+    </div>
     )}
 
     {/* Main Content: PDF + Form */}

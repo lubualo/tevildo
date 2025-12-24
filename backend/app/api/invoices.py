@@ -3,6 +3,7 @@ Invoice API endpoints.
 """
 import hashlib
 import uuid
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
@@ -13,8 +14,9 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.settings import settings
-from app.models import Invoice, StoredFile
+from app.models import Invoice, StoredFile, InvoiceParseAttempt
 from app.api.schemas import InvoiceResponse, InvoiceListResponse, UploadResponse, FileInfo, InvoiceUpdate
+from app.services.pdf_parser import InvoiceParser
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
@@ -110,6 +112,45 @@ async def get_invoice_pdf(
         }
     )
 
+@router.get("/{invoice_id}/parse-attempts", response_model=list)
+async def get_parse_attempts(
+    invoice_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all parse attempts for an invoice.
+
+    Returns the parsing history, most recent first.
+    """
+    attempts = (
+        db.query(InvoiceParseAttempt)
+        .filter(InvoiceParseAttempt.invoice_id == invoice_id)
+        .order_by(InvoiceParseAttempt.created_at.desc())
+        .all()
+    )
+
+    # Convert to dict for JSON response
+    result = []
+    for attempt in attempts:
+        import json
+
+        # Parse the extracted_json string back to dict
+        try:
+            extracted_data = eval(attempt.extracted_json) if attempt.extracted_json else {}
+        except:
+            extracted_data = {}
+
+        result.append({
+            "id": attempt.id,
+            "created_at": attempt.created_at,
+            "parser_name": attempt.parser_name,
+            "confidence": attempt.confidence,
+            "warnings": attempt.warnings,
+            "extracted_data": extracted_data,
+        })
+
+    return result
+
 @router.post("/{invoice_id}/lock", response_model=InvoiceResponse)
 async def lock_invoice(
     invoice_id: str,
@@ -154,6 +195,7 @@ async def upload_invoice(
     Upload an invoice PDF.
 
     Creates a StoredFile record and an Invoice record in UPLOADED state.
+    Then parses the PDF to extract invoice data.
     """
     # Validate file type
     if not file.content_type == "application/pdf":
@@ -223,6 +265,45 @@ async def upload_invoice(
     # Commit to database
     db.commit()
     db.refresh(invoice)
+
+    # Parse the PDF to extract invoice data
+    try:
+        parse_start = time.time()
+        
+        parser = InvoiceParser(file_path)
+        parse_result = parser.parse()
+
+        parse_duration = time.time() - parse_start
+        print(f"⏱️  PDF parsing took {parse_duration:.3f} seconds for invoice {invoice_id}")
+        
+        # Create parse attempt record
+        parse_attempt = InvoiceParseAttempt(
+            id=str(uuid.uuid4()),
+            invoice_id=invoice_id,
+            parser_name="pdfplumber_v1",
+            confidence=parse_result.get("confidence", 0.0),
+            warnings=f"Parse time: {parse_duration:.3f}s" if parse_duration > 2.0 else None,  # ← Add timing to warnings if slow
+            extracted_json=str(parse_result),  # Store full result as JSON string
+        )
+        db.add(parse_attempt)
+
+        # Update invoice status based on confidence
+        if parse_result.get("success") and parse_result.get("confidence", 0) >= 0.7:
+            invoice.status = "PARSED"
+            invoice.parsed_at = datetime.now(timezone.utc)
+        elif parse_result.get("success"):
+            invoice.status = "NEEDS_REVIEW"
+            invoice.parsed_at = datetime.now(timezone.utc)
+        # else: keep status as "UPLOADED" (parsing failed)
+
+        db.commit()
+        db.refresh(invoice)
+
+    except Exception as e:
+        # If parsing fails, don't block the upload
+        # Just log the error and keep invoice as UPLOADED
+        print(f"Warning: Failed to parse invoice {invoice_id}: {e}")
+        # Could save error to parse_attempt table here
 
     return UploadResponse(
         id=invoice.id,
