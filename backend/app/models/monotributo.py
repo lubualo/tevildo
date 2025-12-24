@@ -87,6 +87,10 @@ class MonotributoCategoryLimit(Base):
     pension_contribution_goods = Column(Numeric(precision=15, scale=2), nullable=True)
     social_security_goods = Column(Numeric(precision=15, scale=2), nullable=True)
 
+    # Monthly totals (what you actually pay)
+    total_monthly_services = Column(Numeric(precision=15, scale=2), nullable=True)  # Total for services
+    total_monthly_goods = Column(Numeric(precision=15, scale=2), nullable=True)     # Total for goods
+
     # Timestamps
     created_at = Column(
         DateTime,
