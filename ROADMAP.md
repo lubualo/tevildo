@@ -120,18 +120,45 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 ---
 
-## Phase 3 – Monotributo Tracking
+## Phase 3 – Monotributo Tracking [IN PROGRESS] 🚧
 
 **Goal:** Prevent category overruns.
 
-### Features
-- Category version management
-- Category limits per version
+### Slice 1: Category Management [COMPLETED] ✅
+
+**Backend**
+- [x] Monotributo category version and limit models
+- [x] Database schema with versioning support (version_id, valid_from, valid_to)
+- [x] ARCA web scraper (requests + BeautifulSoup)
+- [x] Parse all category fields (income limits, physical limits, monthly payments)
+- [x] GET endpoint for current categories
+- [x] POST endpoint to update from ARCA with change detection
+- [x] Version comparison logic (detects data changes)
+- [x] Auto-increment version names (2025-v1 → 2025-v2)
+
+**Frontend**
+- [x] TypeScript schemas for Monotributo data
+- [x] Categories page (`/monotributo`) with four sections:
+  - Annual income limits (services/goods)
+  - Physical/consumption limits (surface, electricity, rent)
+  - Monthly payments - services
+  - Monthly payments - goods
+- [x] "Update from ARCA" button with status messages
+- [x] Version badge and validity date display
+- [x] Navigation links between pages
+- [x] Argentine locale formatting (ARS currency, numbers)
+
+**Completed:** 2025-12-24
+
+### Slice 2: Usage Tracking [PENDING]
+
+**Features**
 - Rolling 12-month calculations
 - Usage percentage + remaining margin
+- Link invoices to category versions
 
-### UI
-- Traffic-light status
+**UI**
+- Traffic-light status indicators
 - Historical category context
 
 ### Definition of done

@@ -54,12 +54,18 @@ export default function HomePage() {
         <p className="text-muted-foreground">
           Upload invoice PDFs to track your Monotributo income
         </p>
-        <div className="mt-4">
+        <div className="mt-4 flex gap-4">
           <Link
             href="/invoices"
             className="text-sm text-primary hover:underline"
           >
             View all invoices →
+          </Link>
+          <Link
+            href="/monotributo"
+            className="text-sm text-primary hover:underline"
+          >
+            View categories →
           </Link>
         </div>
       </div>
