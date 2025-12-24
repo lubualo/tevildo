@@ -77,11 +77,11 @@ Represents a published Monotributo regulation/table.
 - Auditability across regulatory changes
 
 **Key fields**
-- `id`
-- `name`
-- `valid_from`
-- `valid_to`
-- `is_active`
+- `id` (UUID, TEXT)
+- `name` – e.g. "2025-v1", "2025-v2"
+- `valid_from` – ISO-8601 date when this version becomes active
+- `valid_to` – ISO-8601 date when it expires (NULL if current)
+- `notes` – optional description of regulatory changes
 - `created_at`
 
 ---
@@ -90,17 +90,37 @@ Represents a published Monotributo regulation/table.
 Represents category limits within a given version.
 
 **Purpose**
-- Store per-category annual limits
+- Store per-category annual limits and monthly payment amounts
 - Avoid duplication of version metadata
+- Store all ARCA fields for completeness
 
 **Key fields**
-- `id`
-- `version_id`
-- `category_code` (A, B, C…)
-- `annual_ars_limit`
+- `id` (UUID, TEXT)
+- `version_id` (FK to monotributo_category_version)
+- `category_letter` (A, B, C, D, E, F, G, H, I, J, K)
+- Income limits:
+  - `annual_income_limit_services` – for "Locaciones y prestaciones de servicios"
+  - `annual_income_limit_goods` – for "Venta de cosas muebles"
+- Physical/consumption limits:
+  - `surface_limit_m2` – affected surface area
+  - `electricity_limit_kwh` – annual electricity consumption
+  - `annual_rent_limit_ars` – annual accrued rent
+- Monthly payments (services):
+  - `integrated_tax_services`
+  - `pension_contribution_services`
+  - `social_security_services`
+- Monthly payments (goods):
+  - `integrated_tax_goods`
+  - `pension_contribution_goods`
+  - `social_security_goods`
+- `created_at`
 
 **Constraints**
-- Unique `(version_id, category_code)`
+- Unique `(version_id, category_letter)`
+
+**Notes**
+- For SW developers working abroad, primarily use `annual_income_limit_services`
+- All ARCA fields stored for completeness and future flexibility
 
 ---
 

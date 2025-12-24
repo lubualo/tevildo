@@ -119,10 +119,11 @@ It answers:
 - When does it apply?
 
 Example:
-- `id = v_2025_01`
-- `name = "ARCA update Jan 2025"`
-- `valid_from = 2025-01-01`
+- `id = uuid-123`
+- `name = "2025-v1"`
+- `valid_from = 2025-08-01`
 - `valid_to = NULL`
+- `notes = "Vigente desde 1/08/2025 (ARCA)"`
 
 This is **metadata**.
 
@@ -133,14 +134,17 @@ Represents the **actual category limits inside a version**.
 
 It answers:
 - What is the annual ARS limit for category A, B, C… in this version?
+- What are the monthly payment amounts for services vs goods?
 
-Example rows:
-- `(v_2025_01, 'A', 7_813_063.45)`
-- `(v_2025_01, 'B', 11_447_046.44)`
+Example rows (simplified):
+- `(uuid-123, 'A', services: 8_992_597.87, goods: 8_992_597.87, ...)`
+- `(uuid-123, 'B', services: 13_175_201.52, goods: 13_175_201.52, ...)`
 
 This avoids:
 - duplicating validity dates per category
 - accidental inconsistencies
+
+**Note:** Stores both "Locaciones y prestaciones de servicios" (services) and "Venta de cosas muebles" (goods) limits, plus all other ARCA fields for completeness.
 
 ---
 

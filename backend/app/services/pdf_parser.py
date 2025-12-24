@@ -17,7 +17,7 @@ class InvoiceParser:
     """
     Extracts invoice data from PDF files.
 
-    Designed for Argentine AFIP invoices (Types A, B, C, E).
+    Designed for Argentine ARCA invoices (Types A, B, C, E).
     """
 
     def __init__(self, pdf_path: Path):
