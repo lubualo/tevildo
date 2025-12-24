@@ -8,12 +8,13 @@ from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.settings import settings
 from app.models import Invoice, StoredFile
-from app.api.schemas import InvoiceResponse, InvoiceListResponse, UploadResponse, FileInfo
+from app.api.schemas import InvoiceResponse, InvoiceListResponse, UploadResponse, FileInfo, InvoiceUpdate
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
@@ -43,7 +44,106 @@ async def list_invoices(
         limit=limit,
     )
 
+@router.get("/{invoice_id}", response_model=InvoiceResponse)
+async def get_invoice(
+    invoice_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Get a single invoice by ID.
 
+    Returns full invoice details including all fields.
+    """
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Invoice {invoice_id} not found"
+        )
+
+    return InvoiceResponse.model_validate(invoice)
+
+@router.get("/{invoice_id}/pdf")
+async def get_invoice_pdf(
+    invoice_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Serve the PDF file for an invoice.
+
+    Returns the raw PDF file for browser viewing.
+    """
+    # Get the invoice
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Invoice {invoice_id} not found"
+        )
+
+    # Get the stored file
+    stored_file = db.query(StoredFile).filter(StoredFile.id == invoice.stored_file_id).first()
+
+    if not stored_file:
+        raise HTTPException(
+            status_code=404,
+            detail=f"PDF file not found for invoice {invoice_id}"
+        )
+
+    # Build the full file path
+    file_path = settings.tevildo_data_dir / stored_file.relative_path
+
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"PDF file does not exist on disk: {stored_file.relative_path}"
+        )
+
+    # Return the PDF file
+    return FileResponse(
+        path=str(file_path),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": "inline"
+        }
+    )
+
+@router.post("/{invoice_id}/lock", response_model=InvoiceResponse)
+async def lock_invoice(
+    invoice_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Lock an invoice to make it immutable.
+
+    Once locked, the invoice cannot be updated or deleted.
+    This is critical for audit-safety and regulatory compliance.
+    """
+    # Get the invoice
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Invoice {invoice_id} not found"
+        )
+
+    # Check if already locked
+    if invoice.locked_at is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invoice already locked at: {invoice.locked_at}"
+        )
+
+    # Lock the invoice with current timestamp
+    invoice.locked_at = datetime.now(timezone.utc)
+
+    db.commit()
+    db.refresh(invoice)
+
+    return InvoiceResponse.model_validate(invoice)
 
 @router.post("/upload", response_model=UploadResponse)
 async def upload_invoice(
@@ -135,6 +235,45 @@ async def upload_invoice(
             sha256=sha256_hash,
         )
     )
+
+@router.put("/{invoice_id}", response_model=InvoiceResponse)
+async def update_invoice(
+    invoice_id: str,
+    update_data: InvoiceUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update invoice fields.
+
+    Only unlocked invoices can be updated.
+    Only provided fields are updated (partial update).
+    """
+    # Get the invoice
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+
+    if not invoice:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Invoice {invoice_id} not found"
+        )
+
+    # Check if locked
+    if invoice.locked_at is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot update locked invoice. Locked at: {invoice.locked_at}"
+        )
+
+    # Update only provided fields
+    update_dict = update_data.model_dump(exclude_unset=True)
+
+    for field, value in update_dict.items():
+        setattr(invoice, field, value)
+
+    db.commit()
+    db.refresh(invoice)
+
+    return InvoiceResponse.model_validate(invoice)
 
 @router.delete("/{invoice_id}")
 async def delete_invoice(

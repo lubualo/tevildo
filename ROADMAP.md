@@ -49,7 +49,7 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 ---
 
-## Phase 1 – Invoice Ingestion (MVP) [IN PROGRESS]
+## Phase 1 – Invoice Ingestion (MVP) [COMPLETED] ✅
 
 **Goal:** Replace spreadsheets with a trusted source of truth.
 
@@ -60,9 +60,10 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 - [x] Pydantic schemas for type-safe API responses
 - [x] Invoice list endpoint (GET /api/invoices) with pagination
 - [x] Invoice delete endpoint (DELETE /api/invoices/{id})
-- [ ] Invoice detail endpoint (GET /api/invoices/{id})
-- [ ] Invoice update endpoint (PUT /api/invoices/{id})
-- [ ] Invoice lock endpoint (POST /api/invoices/{id}/lock)
+- [x] Invoice detail endpoint (GET /api/invoices/{id})
+- [x] Invoice PDF serving endpoint (GET /api/invoices/{id}/pdf)
+- [x] Invoice update endpoint (PUT /api/invoices/{id})
+- [x] Invoice lock endpoint (POST /api/invoices/{id}/lock)
 
 ### Frontend
 - [x] Next.js 16 setup with App Router
@@ -72,14 +73,19 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 - [x] Status badges with color coding
 - [x] Navigation between upload and list pages
 - [x] Delete functionality with confirmation dialog
-- [ ] Invoice detail / edit screen
+- [x] Invoice detail / edit screen with PDF viewer
+- [x] React Hook Form + Zod validation
+- [x] Auto-calculation for currency conversion (fx_rate × total_original = total_ars)
+- [x] Locked status indicators in list and detail views
 
 ### Definition of done
 - [x] User can upload PDFs via web UI
 - [x] User can see list of uploaded invoices
-- [ ] User can manually input all invoice data
-- [ ] Totals and dates persist correctly
-- [ ] User can lock invoice snapshot
+- [x] User can manually input all invoice data
+- [x] Totals and dates persist correctly
+- [x] User can lock invoice snapshot
+
+**Completed:** 2025-12-24
 
 ---
 

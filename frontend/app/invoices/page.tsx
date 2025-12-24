@@ -1,7 +1,7 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,7 @@ export default function InvoicesPage() {
 const [invoices, setInvoices] = useState<Invoice[]>([]);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState<string | null>(null);
+const router = useRouter();
 
 const fetchInvoices = async () => {
     try {
@@ -146,8 +147,21 @@ return (
             </TableRow>
             ) : (
             invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                <TableRow
+                key={invoice.id}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => router.push(`/invoices/${invoice.id}`)}
+                >
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(invoice.status)}
+                    {invoice.locked_at && (
+                      <Badge variant="outline" className="text-xs">
+                        🔒 Locked
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>{formatDate(invoice.uploaded_at)}</TableCell>
                 <TableCell>{invoice.invoice_number || "—"}</TableCell>
                 <TableCell>{invoice.client_name || "—"}</TableCell>
@@ -159,7 +173,7 @@ return (
                         })
                     : "—"}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive" size="sm">
