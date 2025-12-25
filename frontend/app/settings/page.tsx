@@ -194,6 +194,60 @@ export default function SettingsPage() {
           {saving ? "Saving..." : "Save Settings"}
         </Button>
       </div>
+
+      {/* Export & Backup */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Export & Backup</CardTitle>
+          <CardDescription>
+            Download reports and backups of your data
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3">
+              <div>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.open("http://localhost:8000/api/reports/excel", "_blank")}
+                >
+                  Download Excel Report
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Summary spreadsheet with invoices and monthly breakdown (last 12 months, locked only)
+                </p>
+              </div>
+
+              <div>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.open("http://localhost:8000/api/reports/zip", "_blank")}
+                >
+                  Download ZIP with PDFs
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Invoice PDFs grouped by month + Excel report (last 12 months, locked only)
+                </p>
+              </div>
+
+              <div className="pt-2 border-t">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.open("http://localhost:8000/api/reports/backup", "_blank")}
+                >
+                  Download Full Backup
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Complete backup with all PDFs and data (all invoices, all statuses)
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

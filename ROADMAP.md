@@ -177,18 +177,31 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 ---
 
-## Phase 4 – Reports & Exports
+## Phase 4 – Reports & Exports [COMPLETED] ✅
 
 **Goal:** Accountant-ready outputs.
 
-### Features
-- Excel summary report
-- ZIP export with PDFs grouped by month
-- Full local backup export
+### Backend
+- [x] Excel report generator with 3 sheets (Summary, Invoices, Monthly Breakdown)
+- [x] ZIP export with PDFs grouped by month + Excel report
+- [x] Full backup export (all PDFs, JSON data, settings)
+- [x] GET /api/reports/excel endpoint
+- [x] GET /api/reports/zip endpoint
+- [x] GET /api/reports/backup endpoint
+- [x] Professional formatting (headers, borders, currency)
+- [x] Meaningful filenames with company name and date
+
+### Frontend
+- [x] "Export Excel" button on dashboard
+- [x] Export & Backup section in Settings page
+- [x] Three export options with descriptions
 
 ### Definition of done
-- Accountant can work without re-processing data
-- Exports are reproducible
+- [x] Accountant can work without re-processing data
+- [x] Exports are reproducible
+- [x] All invoice PDFs included in ZIP/backup
+
+**Completed:** 2025-12-25
 
 ---
 

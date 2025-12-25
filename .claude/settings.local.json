@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(tree:*)",
-      "Bash(docker compose logs:*)"
+      "Bash(docker compose logs:*)",
+      "Bash(curl:*)",
+      "Bash(unzip:*)"
     ],
     "deny": [],
     "ask": []
