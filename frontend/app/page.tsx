@@ -147,6 +147,12 @@ export default function DashboardPage() {
           <Link href="/upload">
             <Button variant="default">Upload Invoice</Button>
           </Link>
+          <Button
+            variant="outline"
+            onClick={() => window.open("http://localhost:8000/api/reports/excel", "_blank")}
+          >
+            Export Excel
+          </Button>
           <Link href="/invoices">
             <Button variant="outline">Invoices</Button>
           </Link>
