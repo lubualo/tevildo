@@ -351,6 +351,12 @@ async def update_invoice(
     for field, value in update_dict.items():
         setattr(invoice, field, value)
 
+    # CRITICAL: Auto-set fx_date to match issue_date for audit-safety
+    # Exchange rates must reflect the date when the invoice was issued, not when uploaded
+    # Only set fx_date if there's an fx_rate (otherwise it's irrelevant)
+    if invoice.issue_date and invoice.fx_rate:
+        invoice.fx_date = invoice.issue_date
+
     db.commit()
     db.refresh(invoice)
 

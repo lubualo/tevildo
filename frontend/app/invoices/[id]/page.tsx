@@ -55,7 +55,6 @@ const form = useForm<InvoiceFormData>({
     total_ars: "",
     total_original: "",
     fx_rate: "",
-    fx_date: "",
     fx_source: "",
     notes: "",
     },
@@ -145,7 +144,6 @@ useEffect(() => {
         total_ars: data.total_ars?.toString() || "",
         total_original: data.total_original?.toString() || "",
         fx_rate: data.fx_rate?.toString() || "",
-        fx_date: data.fx_date || "",
         fx_source: data.fx_source || "",
         notes: data.notes || "",
         });
@@ -200,7 +198,7 @@ const onSubmit = async (data: InvoiceFormData) => {
     if (data.total_ars) updatePayload.total_ars = Number(data.total_ars);
     if (data.total_original) updatePayload.total_original = Number(data.total_original);
     if (data.fx_rate) updatePayload.fx_rate = Number(data.fx_rate);
-    if (data.fx_date) updatePayload.fx_date = data.fx_date;
+    // fx_date is auto-filled by backend from issue_date, don't send it
     if (data.fx_source) updatePayload.fx_source = data.fx_source;
     if (data.notes) updatePayload.notes = data.notes;
 
@@ -271,7 +269,6 @@ form.reset({
     total_ars: data.total_ars?.toString() || "",
     total_original: data.total_original?.toString() || "",
     fx_rate: data.fx_rate?.toString() || "",
-    fx_date: data.fx_date || "",
     fx_source: data.fx_source || "",
     notes: data.notes || "",
 });
@@ -608,21 +605,16 @@ return (
                 )}
             </div>
 
-            {/* FX Date */}
-            <div>
-                <Label htmlFor="fx_date">Exchange Rate Date - Optional</Label>
-                <Input
-                id="fx_date"
-                type="date"
-                {...form.register("fx_date")}
-                disabled={isLocked}
-                />
-                {form.formState.errors.fx_date && (
-                <p className="text-sm text-red-500 mt-1">
-                    {form.formState.errors.fx_date.message}
-                </p>
-                )}
-            </div>
+            {/* FX Date - Auto-filled from issue date */}
+            {invoice?.fx_date && (
+              <div>
+                <Label>Exchange Rate Date (auto-filled)</Label>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {new Date(invoice.fx_date).toLocaleDateString("es-AR")}
+                  <span className="ml-2 text-xs">(matches issue date)</span>
+                </div>
+              </div>
+            )}
 
             {/* FX Source */}
             <div>

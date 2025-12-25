@@ -196,7 +196,7 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 ## Known Issues & Technical Debt
 
 ### Critical (Audit-Safety)
-- **FX Rate Date Bug**: Currently `fx_date` defaults to current date instead of invoice issue date. This breaks the snapshot philosophy - exchange rates must reflect the rate **at the time the invoice was issued**, not when it was uploaded. Fix: Auto-set `fx_date` to `issue_date` when user doesn't provide it.
+- ~~**FX Rate Date Bug**: Currently `fx_date` defaults to current date instead of invoice issue date. This breaks the snapshot philosophy - exchange rates must reflect the rate **at the time the invoice was issued**, not when it was uploaded. Fix: Auto-set `fx_date` to `issue_date` when user doesn't provide it.~~ **FIXED 2025-12-25**: `fx_date` now automatically matches `issue_date` whenever an `fx_rate` is present. Field removed from UI (read-only display only).
 
 ### Nice-to-Have
 - ARCA version date parsing (currently uses fetch date as fallback)
