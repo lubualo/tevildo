@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import { type UsageResponse } from "@/lib/schemas/usage";
 
 export default function DashboardPage() {
@@ -135,13 +136,22 @@ export default function DashboardPage() {
     <div className="container mx-auto p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-4xl font-bold">
-            🐱 {data.company_name || "Tevildo"} Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Monotributo income tracking
-          </p>
+        <div className="flex items-center gap-4">
+          <Image
+            src="/tevildo-logo.svg"
+            alt="Tevildo"
+            width={48}
+            height={48}
+            className="dark:invert"
+          />
+          <div>
+            <h1 className="text-4xl font-bold">
+              {data.company_name || "Tevildo"}
+            </h1>
+            <p className="text-muted-foreground">
+              Monotributo income tracking
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Link href="/upload">

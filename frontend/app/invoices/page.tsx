@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -113,7 +114,16 @@ if (error) {
 return (
     <div className="container mx-auto p-8">
     <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+        <Image
+            src="/tevildo-logo.svg"
+            alt="Tevildo"
+            width={36}
+            height={36}
+            className="dark:invert"
+        />
         <h1 className="text-3xl font-bold">Invoices</h1>
+        </div>
         <div className="flex gap-2">
         <Link href="/">
             <Button variant="outline">Dashboard</Button>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -85,11 +86,20 @@ export default function SettingsPage() {
     <div className="container mx-auto p-8 max-w-2xl">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground mt-1">
-            Configure your Tevildo preferences
-          </p>
+        <div className="flex items-center gap-3">
+          <Image
+            src="/tevildo-logo.svg"
+            alt="Tevildo"
+            width={36}
+            height={36}
+            className="dark:invert"
+          />
+          <div>
+            <h1 className="text-3xl font-bold">Settings</h1>
+            <p className="text-muted-foreground">
+              Configure your Tevildo preferences
+            </p>
+          </div>
         </div>
         <Link href="/">
           <Button variant="outline">Back to Dashboard</Button>

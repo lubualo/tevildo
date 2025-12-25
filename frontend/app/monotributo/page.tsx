@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -118,17 +119,26 @@ export default function MonotributoPage() {
   return (
     <div className="container mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Monotributo Categories</h1>
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="outline">{data.version.name}</Badge>
-            <span className="text-sm text-muted-foreground">
-              Valid from: {new Date(data.version.valid_from).toLocaleDateString("es-AR")}
-            </span>
+        <div className="flex items-center gap-4">
+          <Image
+            src="/tevildo-logo.svg"
+            alt="Tevildo"
+            width={36}
+            height={36}
+            className="dark:invert"
+          />
+          <div>
+            <h1 className="text-3xl font-bold">Monotributo Categories</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="outline">{data.version.name}</Badge>
+              <span className="text-sm text-muted-foreground">
+                Valid from: {new Date(data.version.valid_from).toLocaleDateString("es-AR")}
+              </span>
+            </div>
+            {data.version.notes && (
+              <p className="text-sm text-muted-foreground mt-1">{data.version.notes}</p>
+            )}
           </div>
-          {data.version.notes && (
-            <p className="text-sm text-muted-foreground mt-1">{data.version.notes}</p>
-          )}
         </div>
         <div className="flex gap-2">
           <Link href="/">
