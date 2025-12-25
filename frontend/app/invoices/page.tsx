@@ -115,11 +115,11 @@ return (
     <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Invoices</h1>
         <div className="flex gap-2">
-        <Link href="/monotributo">
-            <Button variant="outline">View Categories</Button>
-        </Link>
         <Link href="/">
-            <Button variant="outline">Upload New Invoice</Button>
+            <Button variant="outline">Dashboard</Button>
+        </Link>
+        <Link href="/upload">
+            <Button variant="default">Upload Invoice</Button>
         </Link>
         </div>
     </div>

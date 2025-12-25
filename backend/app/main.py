@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.settings import settings
-from app.api import invoices, monotributo
+from app.api import invoices, monotributo, settings as settings_api
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,6 +52,7 @@ app.add_middleware(
 # Register API routers
 app.include_router(invoices.router)
 app.include_router(monotributo.router)
+app.include_router(settings_api.router)
 
 @app.get("/")
 async def root():

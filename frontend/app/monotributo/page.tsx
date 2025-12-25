@@ -131,6 +131,9 @@ export default function MonotributoPage() {
           )}
         </div>
         <div className="flex gap-2">
+          <Link href="/">
+            <Button variant="outline">Dashboard</Button>
+          </Link>
           <Button
             onClick={handleUpdate}
             disabled={updating}
@@ -138,9 +141,6 @@ export default function MonotributoPage() {
           >
             {updating ? "Updating..." : "Update from ARCA"}
           </Button>
-          <Link href="/invoices">
-            <Button variant="outline">View Invoices</Button>
-          </Link>
         </div>
       </div>
 

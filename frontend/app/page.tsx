@@ -1,140 +1,274 @@
-
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { type UsageResponse } from "@/lib/schemas/usage";
 
-export default function HomePage() {
-  const [uploading, setUploading] = useState(false);
-  const [uploadedInvoice, setUploadedInvoice] = useState<any>(null);
+export default function DashboardPage() {
+  const [data, setData] = useState<UsageResponse | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (file.type !== "application/pdf") {
-      setError("Only PDF files are accepted");
-      return;
-    }
-
-    setUploading(true);
-    setError(null);
-
+  const fetchUsage = async () => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("http://localhost:8000/api/invoices/upload", {
-        method: "POST",
-        body: formData,
-      });
-
+      setLoading(true);
+      const response = await fetch("http://localhost:8000/api/monotributo/usage");
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
+        throw new Error("Failed to fetch usage data");
       }
-
-      const data = await response.json();
-      setUploadedInvoice(data);
+      const result: UsageResponse = await response.json();
+      setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="container mx-auto py-10 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">🐱 Tevildo</h1>
-        <p className="text-muted-foreground">
-          Upload invoice PDFs to track your Monotributo income
-        </p>
-        <div className="mt-4 flex gap-4">
-          <Link
-            href="/invoices"
-            className="text-sm text-primary hover:underline"
-          >
-            View all invoices →
+  useEffect(() => {
+    fetchUsage();
+  }, []);
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("es-AR", {
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getStatusIndicator = (status: string) => {
+    switch (status) {
+      case "safe":
+        return <span className="text-2xl">🟢</span>;
+      case "warning":
+        return <span className="text-2xl">🟡</span>;
+      case "danger":
+        return <span className="text-2xl">🔴</span>;
+      default:
+        return <span className="text-2xl">⚪</span>;
+    }
+  };
+
+  const getProgressBar = (percentage: number) => {
+    const clamped = Math.min(Math.max(percentage, 0), 100);
+    let colorClass = "bg-green-500";
+    if (percentage >= 90) {
+      colorClass = "bg-red-500";
+    } else if (percentage >= 70) {
+      colorClass = "bg-yellow-500";
+    }
+
+    return (
+      <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div
+          className={`h-full ${colorClass} transition-all`}
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
+    );
+  };
+
+  const handleCategoryClick = async (category: string) => {
+    try {
+      await fetch("http://localhost:8000/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ current_category: category }),
+      });
+      await fetchUsage(); // Refresh to show new selection
+    } catch (err) {
+      console.error("Failed to update category:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-8">
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-8">
+        <p className="text-red-500">Error: {error}</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Make sure you've updated categories from ARCA on the{" "}
+          <Link href="/monotributo" className="text-primary hover:underline">
+            categories page
           </Link>
-          <Link
-            href="/monotributo"
-            className="text-sm text-primary hover:underline"
-          >
-            View categories →
+        </p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="container mx-auto p-8">
+        <p className="text-muted-foreground">No data available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-4xl font-bold">
+            🐱 {data.company_name || "Tevildo"} Dashboard
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Monotributo income tracking
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/upload">
+            <Button variant="default">Upload Invoice</Button>
+          </Link>
+          <Link href="/invoices">
+            <Button variant="outline">View Invoices</Button>
+          </Link>
+          <Link href="/monotributo">
+            <Button variant="outline">Categories</Button>
           </Link>
         </div>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Upload Invoice</CardTitle>
-          <CardDescription>
-            Select a PDF invoice to upload to the system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <input
-                type="file"
-                accept=".pdf,application/pdf"
-                onChange={handleFileUpload}
-                disabled={uploading}
-                className="block w-full text-sm text-slate-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-primary file:text-primary-foreground
-                  hover:file:bg-primary/90
-                  file:cursor-pointer
-                  disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-
-            {uploading && (
-              <p className="text-sm text-muted-foreground">Uploading...</p>
-            )}
-
-            {error && (
-              <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
-                {error}
-              </div>
-            )}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Card className="p-6">
+          <div className="text-sm text-muted-foreground mb-1">
+            Rolling 12-Month Total
           </div>
-        </CardContent>
-      </Card>
-
-      {uploadedInvoice && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Upload Successful
-              <Badge variant="secondary">{uploadedInvoice.status}</Badge>
-            </CardTitle>
-            <CardDescription>Invoice has been stored in the system</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="font-medium">Invoice ID:</div>
-              <div className="font-mono text-xs">{uploadedInvoice.id}</div>
-
-              <div className="font-medium">File Path:</div>
-              <div className="font-mono text-xs">{uploadedInvoice.file.path}</div>
-
-              <div className="font-medium">File Size:</div>
-              <div>{(uploadedInvoice.file.size / 1024).toFixed(2)} KB</div>
-
-              <div className="font-medium">Uploaded:</div>
-              <div>{new Date(uploadedInvoice.uploaded_at).toLocaleString()}</div>
-            </div>
-          </CardContent>
+          <div className="text-3xl font-bold">
+            {formatCurrency(data.rolling_12mo_total_ars)}
+          </div>
+          <div className="text-xs text-muted-foreground mt-2">
+            {formatDate(data.date_range.from)} - {formatDate(data.date_range.to)}
+          </div>
         </Card>
-      )}
+
+        <Card className="p-6">
+          <div className="text-sm text-muted-foreground mb-1">Current Category</div>
+          {data.current_category ? (
+            <>
+              <div className="text-3xl font-bold">Category {data.current_category}</div>
+              <div className="text-xs text-muted-foreground mt-2">
+                Click any row below to change
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-muted-foreground">Not Set</div>
+              <div className="text-xs text-muted-foreground mt-2">
+                Click a category below to select
+              </div>
+            </>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <div className="text-sm text-muted-foreground mb-1">Invoices (12mo)</div>
+          <div className="text-3xl font-bold">{data.invoice_count}</div>
+          <div className="text-xs text-muted-foreground mt-2">
+            Only locked invoices counted
+          </div>
+        </Card>
+      </div>
+
+      {/* Category Usage Table */}
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Category Usage</h2>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Category</TableHead>
+                <TableHead className="text-right">Annual Limit</TableHead>
+                <TableHead className="text-right">Your Total</TableHead>
+                <TableHead className="w-[200px]">Usage</TableHead>
+                <TableHead className="text-right">Remaining</TableHead>
+                <TableHead className="w-[60px] text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.categories.slice().reverse().map((cat) => (
+                <TableRow
+                  key={cat.category_letter}
+                  className={`cursor-pointer hover:bg-muted/50 ${
+                    cat.is_current ? "bg-primary/5" : ""
+                  }`}
+                  onClick={() => handleCategoryClick(cat.category_letter)}
+                >
+                  <TableCell className="font-bold text-lg">
+                    {cat.is_current && (
+                      <Badge variant="default" className="mr-2">
+                        ✓
+                      </Badge>
+                    )}
+                    {cat.category_letter}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {formatCurrency(cat.limit)}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {formatCurrency(cat.used)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getProgressBar(cat.percentage)}
+                      <span className="text-sm font-medium w-16 text-right">
+                        {cat.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell
+                    className={`text-right font-mono ${
+                      cat.remaining < 0 ? "text-red-500" : ""
+                    }`}
+                  >
+                    {formatCurrency(cat.remaining)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {getStatusIndicator(cat.status)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="mt-4 text-sm text-muted-foreground">
+          <p>
+            <strong>Income type:</strong> {data.income_type === "services" ? "Services (Locaciones)" : "Goods (Venta de bienes)"}
+          </p>
+          <p className="mt-1">
+            Click any category row to set it as your current category. Only locked invoices from the last 12 months are included in calculations.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

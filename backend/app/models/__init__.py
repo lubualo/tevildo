@@ -6,6 +6,7 @@ All models are exported from this module for easy importing.
 from app.models.stored_file import StoredFile
 from app.models.invoice import Invoice, InvoiceParseAttempt
 from app.models.monotributo import MonotributoCategoryVersion, MonotributoCategoryLimit
+from app.models.settings import UserSettings
 from app.models.tag import Tag, invoice_tag
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "InvoiceParseAttempt",
     "MonotributoCategoryVersion",
     "MonotributoCategoryLimit",
+    "UserSettings",
     "Tag",
     "invoice_tag",
 ]

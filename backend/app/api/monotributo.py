@@ -2,15 +2,18 @@
 Monotributo API endpoints.
 """
 from typing import List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta, date
 from decimal import Decimal
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database import get_db
 from app.models.monotributo import MonotributoCategoryVersion, MonotributoCategoryLimit
+from app.models.invoice import Invoice
+from app.models.settings import UserSettings
 from app.services.arca_scraper import ARCAScraper
 
 router = APIRouter(prefix="/api/monotributo", tags=["monotributo"])
@@ -236,3 +239,115 @@ def _has_data_changed(current_limits: List[MonotributoCategoryLimit], scraped_ca
             return True
 
     return False
+
+
+@router.get("/usage")
+async def get_category_usage(db: Session = Depends(get_db)):
+    """
+    Calculate rolling 12-month income and usage across all categories.
+
+    Returns:
+    - Rolling 12-month total (from locked invoices)
+    - Usage percentage and remaining margin for each category
+    - Current user settings (company name, selected category, income type)
+    - Invoice count
+    - Date range
+    """
+    # Get user settings
+    settings = db.query(UserSettings).first()
+    if not settings:
+        # Create default if doesn't exist
+        settings = UserSettings(
+            id=str(uuid.uuid4()),
+            company_name=None,
+            current_category=None,
+            income_type="services",
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
+        )
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+
+    # Calculate date range (12 months back from today)
+    today = date.today()
+    twelve_months_ago = today - timedelta(days=365)
+
+    # Query locked invoices from last 12 months
+    invoices = db.query(Invoice).filter(
+        Invoice.locked_at.isnot(None),
+        Invoice.issue_date >= twelve_months_ago.isoformat(),
+        Invoice.issue_date <= today.isoformat()
+    ).all()
+
+    # Calculate total
+    rolling_total = sum(
+        float(inv.total_ars) if inv.total_ars else 0
+        for inv in invoices
+    )
+
+    # Get current category version
+    current_version = (
+        db.query(MonotributoCategoryVersion)
+        .filter(MonotributoCategoryVersion.valid_to == None)
+        .order_by(MonotributoCategoryVersion.valid_from.desc())
+        .first()
+    )
+
+    if not current_version:
+        raise HTTPException(
+            status_code=404,
+            detail="No active category version found. Please update categories from ARCA."
+        )
+
+    # Get all category limits
+    limits = (
+        db.query(MonotributoCategoryLimit)
+        .filter(MonotributoCategoryLimit.version_id == current_version.id)
+        .order_by(MonotributoCategoryLimit.category_letter)
+        .all()
+    )
+
+    # Calculate usage for each category
+    categories_usage = []
+    for limit in limits:
+        # Choose limit based on user's income type
+        if settings.income_type == "services":
+            annual_limit = float(limit.annual_income_limit_services)
+        else:
+            annual_limit = float(limit.annual_income_limit_goods)
+
+        # Calculate percentage and remaining
+        percentage = (rolling_total / annual_limit * 100) if annual_limit > 0 else 0
+        remaining = annual_limit - rolling_total
+
+        # Determine status
+        if percentage >= 90:
+            status = "danger"
+        elif percentage >= 70:
+            status = "warning"
+        else:
+            status = "safe"
+
+        categories_usage.append({
+            "category_letter": limit.category_letter,
+            "limit": annual_limit,
+            "used": rolling_total,
+            "percentage": round(percentage, 2),
+            "remaining": remaining,
+            "status": status,
+            "is_current": limit.category_letter == settings.current_category
+        })
+
+    return {
+        "rolling_12mo_total_ars": rolling_total,
+        "date_range": {
+            "from": twelve_months_ago.isoformat(),
+            "to": today.isoformat()
+        },
+        "invoice_count": len(invoices),
+        "current_category": settings.current_category,
+        "company_name": settings.company_name,
+        "income_type": settings.income_type,
+        "categories": categories_usage
+    }
