@@ -8,8 +8,8 @@ export function Footer() {
         <Image
           src="/panthra-logo-light.svg"
           alt="Panthra"
-          width={80}
-          height={20}
+          width={40}
+          height={10}
           className="dark:invert opacity-70 hover:opacity-100 transition-opacity"
         />
       </div>
