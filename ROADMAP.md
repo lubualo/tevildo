@@ -120,7 +120,7 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 ---
 
-## Phase 3 – Monotributo Tracking [IN PROGRESS] 🚧
+## Phase 3 – Monotributo Tracking [COMPLETED] ✅
 
 **Goal:** Prevent category overruns.
 
@@ -150,20 +150,30 @@ It is intentionally conservative, local-first, and optimized for correctness ove
 
 **Completed:** 2025-12-24
 
-### Slice 2: Usage Tracking [PENDING]
+### Slice 2: Usage Tracking Dashboard [COMPLETED] ✅
 
-**Features**
-- Rolling 12-month calculations
-- Usage percentage + remaining margin
-- Link invoices to category versions
+**Backend**
+- [x] User settings table (company name, current category, income type)
+- [x] GET/PUT /api/settings endpoints
+- [x] GET /api/monotributo/usage endpoint with rolling 12-month calculations
+- [x] Usage percentage and remaining margin per category
+- [x] Traffic-light status logic (safe <70%, warning 70-90%, danger >90%)
 
-**UI**
-- Traffic-light status indicators
-- Historical category context
+**Frontend**
+- [x] Dashboard home page (`/`) replacing upload page
+- [x] Summary cards: rolling total, current category, invoice count
+- [x] Category usage table with all A-K categories (sorted K→A)
+- [x] Visual progress bars and traffic lights (🟢🟡🔴)
+- [x] Click-to-select category functionality
+- [x] Upload moved to `/upload` page
+- [x] Navigation updates across all pages
+
+**Completed:** 2025-12-25
 
 ### Definition of done
-- Correct calculations for past and current invoices
-- Historical reports remain stable after category changes
+- [x] Correct calculations for past and current invoices
+- [x] Only locked invoices counted in rolling totals
+- [x] Visual warnings when approaching category limits
 
 ---
 

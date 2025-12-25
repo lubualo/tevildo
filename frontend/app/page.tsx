@@ -148,10 +148,13 @@ export default function DashboardPage() {
             <Button variant="default">Upload Invoice</Button>
           </Link>
           <Link href="/invoices">
-            <Button variant="outline">View Invoices</Button>
+            <Button variant="outline">Invoices</Button>
           </Link>
           <Link href="/monotributo">
             <Button variant="outline">Categories</Button>
+          </Link>
+          <Link href="/settings">
+            <Button variant="outline">Settings</Button>
           </Link>
         </div>
       </div>
