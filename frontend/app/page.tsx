@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -13,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
 import { type UsageResponse } from "@/lib/schemas/usage";
 
 export default function DashboardPage() {
@@ -134,45 +132,14 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <Image
-            src="/tevildo-logo.svg"
-            alt="Tevildo"
-            width={48}
-            height={48}
-            className="dark:invert"
-          />
-          <div>
-            <h1 className="text-4xl font-bold">
-              {data.company_name || "Tevildo"}
-            </h1>
-            <p className="text-muted-foreground">
-              Monotributo income tracking
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/upload">
-            <Button variant="default">Upload Invoice</Button>
-          </Link>
-          <Button
-            variant="outline"
-            onClick={() => window.open("http://localhost:8000/api/reports/excel", "_blank")}
-          >
-            Export Excel
-          </Button>
-          <Link href="/invoices">
-            <Button variant="outline">Invoices</Button>
-          </Link>
-          <Link href="/monotributo">
-            <Button variant="outline">Categories</Button>
-          </Link>
-          <Link href="/settings">
-            <Button variant="outline">Settings</Button>
-          </Link>
-        </div>
+      {/* Welcome Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">
+          {data.company_name || "Welcome to Tevildo"}
+        </h1>
+        <p className="text-muted-foreground">
+          Monotributo income tracking dashboard
+        </p>
       </div>
 
       {/* Summary Cards */}

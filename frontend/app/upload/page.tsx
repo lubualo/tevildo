@@ -1,10 +1,6 @@
-
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -49,29 +45,12 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="container mx-auto py-10 max-w-4xl">
+    <div className="container mx-auto p-8 max-w-4xl">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Image
-            src="/tevildo-logo.svg"
-            alt="Tevildo"
-            width={36}
-            height={36}
-            className="dark:invert"
-          />
-          <h1 className="text-4xl font-bold">Upload Invoice</h1>
-        </div>
+        <h1 className="text-3xl font-bold">Upload Invoice</h1>
         <p className="text-muted-foreground">
           Upload invoice PDFs to track your Monotributo income
         </p>
-        <div className="mt-4">
-          <Link
-            href="/"
-            className="text-sm text-primary hover:underline"
-          >
-            ← Back to Dashboard
-          </Link>
-        </div>
       </div>
 
       <Card className="mb-6">
