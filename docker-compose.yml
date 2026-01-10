@@ -15,6 +15,6 @@ services:
       # Bind mount for live code reloading during development
       - ./backend/app:/app/app
       - ./backend/alembic:/app/alembic
+      - ./backend/entrypoint.sh:/app/entrypoint.sh
     working_dir: /app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
