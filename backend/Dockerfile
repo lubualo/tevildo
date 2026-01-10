@@ -21,8 +21,11 @@ COPY . .
 # Create data directory for SQLite and PDFs
 RUN mkdir -p /app/data/invoices
 
+# Make entrypoint executable
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port for FastAPI
 EXPOSE 8000
 
-# Command to run the application (we'll create main.py next)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Run migrations then start app
+CMD ["/app/entrypoint.sh"]

@@ -22,7 +22,7 @@ help:
 	@echo "  make clean       - Remove containers, volumes, and build cache"
 	@echo "  make test        - Run tests (when implemented)"
 
-# Start services
+# Start services (migrations run automatically)
 up:
 	docker compose up --build
 

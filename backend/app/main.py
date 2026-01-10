@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.settings import settings
 from app.api import invoices, monotributo, settings as settings_api, reports
+from app.database import SessionLocal
+from app.services.startup import initialize_categories_if_empty
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,6 +28,13 @@ async def lifespan(app: FastAPI):
     print(f"🐱 {settings.app_name} starting...")
     print(f"📁 Data directory: {settings.tevildo_data_dir}")
     print(f"🗄️  Database: {settings.database_url}")
+
+    # Initialize categories from ARCA if this is first run
+    db = SessionLocal()
+    try:
+        initialize_categories_if_empty(db)
+    finally:
+        db.close()
 
     yield  # Application runs here
 
