@@ -73,43 +73,53 @@ class InvoiceParser:
 
     def _extract_invoice_type(self) -> Optional[str]:
         """Extract invoice type (A, B, C, E, M)."""
-        # Look for type marker at start of document
-        # Type C: "C\nFACTURA"
-        # Type E: "E\nEXPORT INVOICE"
+        # Look for type marker - various formats:
+        # "E FACTURA DE EXPORTACIÓN" or "C FACTURA"
+        # COD. 19 = E, COD. 11 = C, etc.
 
         patterns = [
             r'ORIGINAL\s+([ABCEM])\s+(?:FACTURA|EXPORT)',  # Type at start
-            r'COD\.\s+(011|019)',  # Code mapping: 011=C, 019=E
+            r'([ABCEM])\s+FACTURA',  # Spanish format: "E FACTURA DE EXPORTACIÓN"
+            r'COD\.\s*(\d+)',  # Code format: "COD. 19"
         ]
 
         for pattern in patterns:
             match = re.search(pattern, self.text)
             if match:
-                invoice_type = match.group(1)
+                value = match.group(1)
 
-                # Map codes to types for invoices
+                # Map codes to types
                 code_map = {
+                    "11": "C",
                     "011": "C",
+                    "19": "E",
                     "019": "E",
+                    "1": "A",
+                    "001": "A",
+                    "6": "B",
+                    "006": "B",
                 }
-                # Note: Other codes exist (001=A, 006=B, etc.) but not in our samples
 
-                if invoice_type in code_map:
-                    invoice_type = code_map[invoice_type]
+                if value in code_map:
+                    value = code_map[value]
 
-                self.confidence["invoice_type"] = 0.95
-                return invoice_type
+                if value in "ABCEM":
+                    self.confidence["invoice_type"] = 0.95
+                    return value
 
         self.confidence["invoice_type"] = 0.0
         return None
 
     def _extract_invoice_number(self) -> Optional[str]:
         """Extract invoice number."""
-        # Type C: "Punto de Venta: 00002 Comp. Nro: 00000252"
-        # Type E: "Invoice No.: 00001-00000077"
+        # Various formats:
+        # "Compr. Nro: 00002-00000001" (Spanish)
+        # "Invoice No.: 00001-00000077" (English)
+        # "Punto de Venta: 00002 Comp. Nro: 00000252" (Type C)
 
         patterns = [
-            r'Invoice No\.\:\s*(\d+-\d+)',  # Type E format
+            r'Compr\.\s*Nro:?\s*(\d+-\d+)',  # Spanish format with dash
+            r'Invoice No\.\:\s*(\d+-\d+)',  # English format
             r'Punto de Venta:\s*(\d+)\s+Comp\.\s*Nro:\s*(\d+)',  # Type C format
         ]
 
@@ -120,7 +130,7 @@ class InvoiceParser:
                     # Type C: punto de venta + number → combine with dash
                     invoice_number = f"{match.group(1)}-{match.group(2)}"
                 else:
-                    # Type E: already has dash
+                    # Already has dash
                     invoice_number = match.group(1)
 
                 self.confidence["invoice_number"] = 0.9
@@ -159,11 +169,14 @@ class InvoiceParser:
 
     def _extract_client_name(self) -> Optional[str]:
         """Extract client name."""
-        # Type E: "Customer: Dexteel LLC"
-        # Type C: Often "Consumidor Final" (skip this)
+        # Various formats:
+        # "Señor(es): Deel Inc." (Spanish)
+        # "Customer: Dexteel LLC" (English)
+        # "Apellido y Nombre / Razón Social: ..." (Type C)
 
         patterns = [
-            r'Customer:\s*(.+?)(?:\s+Address:|$)',  # Type E
+            r'Señor\(?es\)?:\s*(.+?)(?:\s+Domicilio:|$)',  # Spanish format
+            r'Customer:\s*(.+?)(?:\s+Address:|$)',  # English Type E
             r'Apellido y Nombre / Razón Social:\s*(.+?)(?:\n|$)',  # Type C
         ]
 
@@ -202,17 +215,24 @@ class InvoiceParser:
 
     def _extract_currency(self) -> Optional[str]:
         """Extract currency code."""
-        # Type E: "Currency: USD - Dólar Estadounidense"
+        # Various formats:
+        # "Divisa: USD - Dólar Estadounidense" (Spanish)
+        # "Currency: USD - US Dollar" (English)
         # Type C: Implicit ARS (peso sign)
 
-        # Look for explicit currency
-        match = re.search(r'Currency:\s*([A-Z]{3})', self.text)
-        if match:
-            self.confidence["currency"] = 0.95
-            return match.group(1)
+        patterns = [
+            r'Divisa:\s*([A-Z]{3})',  # Spanish format
+            r'Currency:\s*([A-Z]{3})',  # English format
+        ]
 
-        # Check for peso sign or ARS keywords
-        if '$' in self.text and 'USD' not in self.text:
+        for pattern in patterns:
+            match = re.search(pattern, self.text)
+            if match:
+                self.confidence["currency"] = 0.95
+                return match.group(1)
+
+        # Check for peso sign or ARS keywords (no USD/EUR mentioned)
+        if '$' in self.text and 'USD' not in self.text and 'Divisa' not in self.text:
             self.confidence["currency"] = 0.7
             return "ARS"
 
@@ -223,13 +243,29 @@ class InvoiceParser:
         """Extract total in original currency (for USD/EUR invoices)."""
         currency = self._extract_currency()
 
-        if currency == "USD":
-            # Look for "Total Amount:USD 1000.00"
-            match = re.search(r'Total Amount:\s*USD\s*([\d,\.]+)', self.text)
-            if match:
-                amount_str = match.group(1).replace(',', '')
-                self.confidence["total_original"] = 0.9
-                return float(amount_str)
+        if currency in ("USD", "EUR"):
+            # Various formats:
+            # "Importe Total: USD 4980,00" or "Importe Total: 4980,00" (Spanish)
+            # "Total Amount:USD 1000.00" (English)
+            patterns = [
+                r'Importe Total:\s*(?:USD|EUR)?\s*([\d\.]+)[,.](\d{2})',  # Spanish format
+                r'Total Amount:\s*(?:USD|EUR)?\s*([\d,\.]+)',  # English format
+            ]
+
+            for pattern in patterns:
+                match = re.search(pattern, self.text)
+                if match:
+                    if len(match.groups()) == 2:
+                        # Spanish format with comma as decimal
+                        integer_part = match.group(1).replace('.', '')
+                        decimal_part = match.group(2)
+                        amount_str = f"{integer_part}.{decimal_part}"
+                    else:
+                        # English format
+                        amount_str = match.group(1).replace(',', '')
+
+                    self.confidence["total_original"] = 0.9
+                    return float(amount_str)
 
         self.confidence["total_original"] = 0.0
         return None
@@ -260,12 +296,20 @@ class InvoiceParser:
 
     def _extract_fx_rate(self) -> Optional[float]:
         """Extract exchange rate (for Type E invoices)."""
-        # Look for "Exchange Rate: 1380.000000"
+        # Various formats:
+        # "Tipo de Cambio: 1447.000000" (Spanish)
+        # "Exchange Rate: 1380.000000" (English)
 
-        match = re.search(r'Exchange Rate:\s*([\d\.]+)', self.text)
-        if match:
-            self.confidence["fx_rate"] = 0.95
-            return float(match.group(1))
+        patterns = [
+            r'Tipo de Cambio:\s*([\d\.]+)',  # Spanish format
+            r'Exchange Rate:\s*([\d\.]+)',  # English format
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, self.text)
+            if match:
+                self.confidence["fx_rate"] = 0.95
+                return float(match.group(1))
 
         self.confidence["fx_rate"] = 0.0
         return None
