@@ -6,7 +6,9 @@
       "Bash(curl:*)",
       "Bash(unzip:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(docker compose *)",
+      "PowerShell(Get-NetTCPConnection *)"
     ],
     "deny": [],
     "ask": []

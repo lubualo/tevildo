@@ -49,10 +49,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS (for future frontend)
+# Configure CORS
+# Matches localhost and 127.0.0.1 on any port: exact-string allow_origins broke
+# whenever the browser used 127.0.0.1 or Next.js fell back to another port.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js default port
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
